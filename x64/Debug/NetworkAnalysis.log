@@ -1,9 +1,2 @@
-﻿NetworkAnalysis.obj : error LNK2019: unresolved external symbol "public: virtual __cdecl Tins::PDU::~PDU(void)" (??1PDU@Tins@@UEAA@XZ) referenced in function "public: virtual __cdecl Tins::EthernetII::~EthernetII(void)" (??1EthernetII@Tins@@UEAA@XZ)
-NetworkAnalysis.obj : error LNK2019: unresolved external symbol "public: void __cdecl Tins::PDU::inner_pdu(class Tins::PDU *)" (?inner_pdu@PDU@Tins@@QEAAXPEAV12@@Z) referenced in function main
-NetworkAnalysis.obj : error LNK2019: unresolved external symbol "public: __cdecl Tins::IPv4Address::IPv4Address(char const *)" (??0IPv4Address@Tins@@QEAA@PEBD@Z) referenced in function main
-NetworkAnalysis.obj : error LNK2019: unresolved external symbol "public: __cdecl Tins::EthernetII::EthernetII(class Tins::HWAddress<6> const &,class Tins::HWAddress<6> const &)" (??0EthernetII@Tins@@QEAA@AEBV?$HWAddress@$05@1@0@Z) referenced in function main
-NetworkAnalysis.obj : error LNK2019: unresolved external symbol "public: __cdecl Tins::IP::IP(class Tins::IPv4Address,class Tins::IPv4Address)" (??0IP@Tins@@QEAA@VIPv4Address@1@0@Z) referenced in function main
-NetworkAnalysis.obj : error LNK2019: unresolved external symbol "public: __cdecl Tins::TCP::TCP(unsigned short,unsigned short)" (??0TCP@Tins@@QEAA@GG@Z) referenced in function main
-D:\Development Codes\DSA\Network Analysis Project\NetworkAnalysis\lib\tins.lib : warning LNK4272: library machine type 'x86' conflicts with target machine type 'x64'
-D:\Development Codes\DSA\Network Analysis Project\NetworkAnalysis\lib\wpcap.lib : warning LNK4272: library machine type 'x86' conflicts with target machine type 'x64'
-D:\Development Codes\DSA\Network Analysis Project\NetworkAnalysis\x64\Debug\NetworkAnalysis.exe : fatal error LNK1120: 6 unresolved externals
+﻿  main.cpp
+I:\shees\Network-Analysis-for-CTI\main.cpp(1,10): error C1083: Cannot open include file: 'tins/tins.h': No such file or directory
