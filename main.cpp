@@ -10,25 +10,22 @@ using namespace Tins;
 class OUIResolver {
 public:
     OUIResolver(const string& filename) {
-        loadOUIFile(filename);
+       loadOUIFile(filename);
     }
 
     string getNameForOUI(const string& inputMAC) const {
         // Extract the first 6 characters (OUI) from the input MAC address
         string inputOUI = inputMAC.substr(0, 8);
         // Convert the input OUI to uppercase for case-insensitive comparison
-        transform(inputOUI.begin(), inputOUI.end(), inputOUI.begin(), ::toupper);
-        cout << inputOUI << endl;
-        // Search for the name in the map
-        auto it = find_if(ouiMap.begin(), ouiMap.end(),
-            [&inputOUI](const auto& pair) {
-                return pair.first == inputOUI;
-            }
-        );
+        auto it = ouiMap.find(inputOUI);
 
-        return (it != ouiMap.end()) ? it->second : "Name not found for the given OUI.";
+        if (it != ouiMap.end()) {
+            return it->second;
+        }
+        else {
+            return inputOUI;
+        }
     }
-
 private:
     void loadOUIFile(const string& filename) {
         // Open the file
@@ -42,6 +39,7 @@ private:
         while (getline(file, line)) {
             istringstream iss(line);
             string identifier, name;
+            cout << name;
             if (iss >> identifier >> ws && getline(iss, name)) {
                 ouiMap[identifier] = name;
             }
@@ -49,10 +47,21 @@ private:
         file.close();
     }
     map<string, string> ouiMap;
+}; OUIResolver ouiResolver("assets/ouidb.txt");
+
+class LayerFilter {
+
+public:
+    // Function for checking if Physical Layer is Ethernet or Wifi
+
+    // Function for checking if Network layer is IPv4 or IPv6 
+
+    // Function for checking if Data Link Layer is UDP or TCP
 };
 
-OUIResolver ouiResolver("assets/ouidb.txt");
+class NetworkAnalyzer {
 
+};
 bool callback(const PDU& pdu) {
     // The packet probably looks like this:
     //
