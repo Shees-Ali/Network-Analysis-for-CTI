@@ -108,31 +108,39 @@ public:
 		// Only capture udp packets sent to port 53
 		filter = "udp and dst port 53";
 	}
+
 	bool Callback(PDU& pdu) {
 		// The packet probably looks like this:
 		//
 		// EthernetII / IP / UDP / RawPDU
 		DisplayPacket(pdu);
-
-
 		return isSniffing;
 	}
 
 	void DisplayPacket(PDU& pdu) {
+		// Get the Ethernet PDU and convert src and dst address to valid Mac Addresses.
 		EthernetII eth = pdu.rfind_pdu<EthernetII>();
 		string src_range = HWAddress<6>(eth.src_addr()).to_string();
 		string dst_range = HWAddress<6>(eth.dst_addr()).to_string();
+		// Calling function to strip the OUI and get it's name from the Mac Address.
 		cout << "Src: " << ouiResolver.GetNameForOUI(src_range) << ",";
 		cout << "Dst: " << ouiResolver.GetNameForOUI(dst_range) << endl;
 
 
+		// Check if IP PDU exists, if it does then display source and destination IP addresses.
 		if (pdu.find_pdu<IP>()) {
 			IP ip = pdu.rfind_pdu<IP>();
+			// Save the IP Packet to Queue in order to save to PCAP file later
 			packets.push(ip);
 			cout << "Src IP: " << ip.src_addr() << ",";
 			cout << "Dst IP: " << ip.dst_addr() << endl;
 		}
 
+		if (pdu.find_pdu<UDP>()) {
+			UDP udp = pdu.rfind_pdu<UDP>();
+			cout << "User Datagram Protocol, Src Port :" << udp.sport();
+			cout << ", Dst Port :" << udp.dport() << endl;
+		}
 		// Retrieve the RawPDU layer, and construct a 
 		// DNS PDU using its contents.
 		// Retrieve the queries and print the domain name:
@@ -140,6 +148,8 @@ public:
 		for (const auto& query : dns.queries()) {
 			cout << "Domain Name :" << query.dname() << endl;
 		}
+
+		cout << endl;
 	};
 
 	void StartSniffing() {
@@ -269,6 +279,5 @@ int main(int argc, char* argv[]) {
 	thread eventListenerThread(&EventHandler::EventListener, &handler);
 
 	snifferThread.join();
-	//handler.EventListener();
 	eventListenerThread.join();
 }
