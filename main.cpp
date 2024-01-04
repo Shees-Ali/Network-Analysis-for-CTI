@@ -11,6 +11,19 @@
 using namespace std;
 using namespace Tins;
 
+template <class T>
+void takeInput(T& refrence)
+{
+	cin >> refrence;
+	while (!cin)
+	{
+		cout << "Invalid Input, Try Again: ";
+		cin.clear();
+		fflush(stdin);
+		cin >> refrence;
+	}
+}
+
 HANDLE hStdin;
 DWORD fdwSaveOldMode;
 
@@ -73,29 +86,6 @@ public:
 	string FilterTransportLayer(const PDU& pdu) {
 
 	}
-
-	bool checkIfIpv4(PDU& pdu) {
-	}
-
-	bool checkIfIpv6() {
-
-	}
-
-	bool checkIfEthernet() {
-
-	}
-
-	bool checkIfWIFI() {
-
-	}
-
-	bool checkIfUBP() {
-
-	}
-
-	bool checkIfTCP() {
-
-	}
 };
 
 class NetworkAnalyzer {
@@ -108,6 +98,32 @@ public:
 		// Only capture udp packets sent to port 53
 		filter = "udp and dst port 53";
 	}
+	void Start() {
+		system("cls");
+		int choice;
+		cout << "------------ Network Analyzer for CTI ------------" << endl;
+		cout << "Filter :" << filter << endl << endl;
+		cout << "Select from below options :" << endl;
+		cout << "1. Update Filter" << endl;
+		cout << "2. Start Sniffing" << endl;
+		cout << "3. Analyze Last Sniffing Session" << endl;
+		cout << "4. Save Last Sniffing Session to PCAP file." << endl;
+		cout << "Enter :";
+		takeInput(choice);
+		switch (choice)
+		{
+		case 1:
+			UpdateFilter();
+			break;
+		case 2:
+			StartSniffing();
+			break;
+		default:
+			cout << "Invalid Choice !!!" << endl;
+			Start();
+			break;
+		}
+	} 
 
 	bool Callback(PDU& pdu) {
 		// The packet probably looks like this:
@@ -122,10 +138,10 @@ public:
 		EthernetII eth = pdu.rfind_pdu<EthernetII>();
 		string src_range = HWAddress<6>(eth.src_addr()).to_string();
 		string dst_range = HWAddress<6>(eth.dst_addr()).to_string();
+
 		// Calling function to strip the OUI and get it's name from the Mac Address.
 		cout << "Src: " << ouiResolver.GetNameForOUI(src_range) << ",";
 		cout << "Dst: " << ouiResolver.GetNameForOUI(dst_range) << endl;
-
 
 		// Check if IP PDU exists, if it does then display source and destination IP addresses.
 		if (pdu.find_pdu<IP>()) {
@@ -136,11 +152,13 @@ public:
 			cout << "Dst IP: " << ip.dst_addr() << endl;
 		}
 
+		// Check If UDP PDU exists, if it does then display corresponding info
 		if (pdu.find_pdu<UDP>()) {
 			UDP udp = pdu.rfind_pdu<UDP>();
 			cout << "User Datagram Protocol, Src Port :" << udp.sport();
 			cout << ", Dst Port :" << udp.dport() << endl;
 		}
+		
 		// Retrieve the RawPDU layer, and construct a 
 		// DNS PDU using its contents.
 		// Retrieve the queries and print the domain name:
@@ -152,7 +170,35 @@ public:
 		cout << endl;
 	};
 
+	void UpdateFilter() {
+		//system("cls");
+		//string updated_filter;
+		//cout << "Current Filter :" << filter;
+		//cout << endl << "Enter Updated Filter :";
+		//getline(cin ,updated_filter);
+
+		//filter = updated_filter;
+		//cout << "Filter Updated !";
+		//Start();
+	}
+
 	void StartSniffing() {
+		// Clear Console Screen
+		system("cls");
+
+		//std::cout << '-' << std::flush;
+		//for (;;) {
+		//	Sleep(10);
+		//	std::cout << "\b\\" << std::flush;
+		//	Sleep(10);
+		//	std::cout << "\b|" << std::flush;
+		//	Sleep(10);
+		//	std::cout << "\b/" << std::flush;
+		//	Sleep(10);
+		//	std::cout << "\b-" << std::flush;
+		//}
+
+		isSniffing = true;
 		// Sniff on the default interface
 		NetworkInterface iface = NetworkInterface::default_interface();
 		SnifferConfiguration config;
@@ -165,6 +211,7 @@ public:
 
 	void StopSniffing() {
 		isSniffing = false;
+		Start();
 	}
 
 	void SavetoPCAP() {
@@ -275,9 +322,10 @@ int main(int argc, char* argv[]) {
 	EventHandler handler(&analyzer);
 
 	// Utilizing threading to run the functions simultaneously.
-	thread snifferThread(&NetworkAnalyzer::StartSniffing, &analyzer);
+	thread snifferThread(&NetworkAnalyzer::Start, &analyzer);
 	thread eventListenerThread(&EventHandler::EventListener, &handler);
 
+	// Wait for both threads to end
 	snifferThread.join();
 	eventListenerThread.join();
 }
