@@ -102,6 +102,9 @@ void Analyzer::Start() {
     case 2:
         StartSniffing();
         break;
+    case 4:
+        SavetoPCAP();
+        break;
     default:
         cout << "Invalid Choice !!!" << endl;
         Start();
