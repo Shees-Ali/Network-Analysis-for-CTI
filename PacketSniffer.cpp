@@ -1,4 +1,5 @@
 #include "PacketSniffer.h"
+#include "Analysis.h"
 
 using namespace std;
 using namespace Tins;
@@ -82,6 +83,11 @@ Analyzer::Analyzer() : ouiResolver("assets/ouidb.txt") {
     filter = "udp and dst port 53";
 }
 
+void showFinalAnalysis() {
+    Analysis analysis;
+    analysis.Print();
+}
+
 void Analyzer::Start() {
     system("cls");
     int choice;
@@ -101,6 +107,9 @@ void Analyzer::Start() {
         break;
     case 2:
         StartSniffing();
+        break;
+    case 3:
+        showFinalAnalysis();
         break;
     case 4:
         SavetoPCAP();
@@ -156,6 +165,9 @@ void Analyzer::DisplayPacket(PDU& pdu) {
     for (const auto& query : dns.queries()) {
         cout << "Domain Name :" << query.dname() << endl;
     }
+
+    Analysis analysis;
+    analysis.GatherStatistics(pdu);
 
     cout << endl;
 }

@@ -2,6 +2,7 @@
 
 #ifndef PACKET_SNIFFER_H
 #define PACKET_SNIFFER_H
+#include "Analysis.h"
 #include <string>
 #include <Tins/tins.h>
 #include <queue>
