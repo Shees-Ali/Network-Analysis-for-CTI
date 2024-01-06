@@ -17,9 +17,6 @@ void takeInput(T& refrence)
     }
 }
 
-HANDLE hStdin;
-DWORD fdwSaveOldMode;
-
 OUIResolver::OUIResolver(const string& filename) {
     LoadOUIFile(filename);
 }
@@ -81,23 +78,31 @@ Analyzer::Analyzer() : ouiResolver("assets/ouidb.txt") {
     isSniffing = true;
     // Only capture UDP packets sent to port 53
     filter = "udp and dst port 53";
+    iface = NetworkInterface::default_interface();
 }
 
 void showFinalAnalysis() {
     Analysis analysis;
     analysis.Print();
+
+    cout << endl;
+    system("pause");
+    return;
 }
 
 void Analyzer::Start() {
     system("cls");
     int choice;
-    cout << "------------ Network Analyzer for CTI ------------" << endl;
+    cout << "------------ Network Analyzer for CTI ------------" << endl << endl;
     cout << "Filter :" << filter << endl << endl;
+    wcout << "Default Interface :" << iface.friendly_name() << endl << endl;
+
     cout << "Select from below options :" << endl;
     cout << "1. Update Filter" << endl;
-    cout << "2. Start Sniffing" << endl;
-    cout << "3. Analyze Last Sniffing Session" << endl;
-    cout << "4. Save Last Sniffing Session to PCAP file." << endl;
+    cout << "2. Show Network Interfaces" << endl;
+    cout << "3. Start Sniffing" << endl;
+    cout << "4. Analyze Last Sniffing Session" << endl;
+    cout << "5. Save Last Sniffing Session to PCAP file." << endl;
     cout << "Enter :";
     takeInput(choice);
     switch (choice)
@@ -106,12 +111,15 @@ void Analyzer::Start() {
         UpdateFilter();
         break;
     case 2:
-        StartSniffing();
+        ShowInterfaces();
         break;
     case 3:
-        showFinalAnalysis();
+        StartSniffing();
         break;
     case 4:
+        showFinalAnalysis();
+        break;
+    case 5:
         SavetoPCAP();
         break;
     default:
@@ -126,8 +134,10 @@ bool Analyzer::Callback(PDU& pdu) {
     //
     // EthernetII / IP / UDP / RawPDU
     DisplayPacket(pdu);
-    if (packets.size() == (count-1)) {
-        return false;
+    Sleep(100);
+    if (packets.size() >= count) {
+        isSniffing = false;
+        return isSniffing;
     }
     return isSniffing;
 }
@@ -158,6 +168,13 @@ void Analyzer::DisplayPacket(PDU& pdu) {
         cout << ", Dst Port :" << udp.dport() << endl;
     }
 
+    // Check If TCP PDU exists, if it does then display corresponding info
+    if (pdu.find_pdu<TCP>()) {
+        TCP tcp = pdu.rfind_pdu<TCP>();
+        cout << "Transfer Control Protocol, Src Port :" << tcp.sport();
+        cout << ", Dst Port :" << tcp.dport() << endl;
+    }
+
     // Retrieve the RawPDU layer, and construct a 
     // DNS PDU using its contents.
     // Retrieve the queries and print the domain name:
@@ -165,14 +182,74 @@ void Analyzer::DisplayPacket(PDU& pdu) {
     for (const auto& query : dns.queries()) {
         cout << "Domain Name :" << query.dname() << endl;
     }
+
+
     Analysis analysis;
     analysis.GatherStatistics(pdu);
     cout << endl;
 }
 
 void Analyzer::UpdateFilter() {
+    system("cls");
+    string ip_addr = iface.ipv4_address().to_string();
     // Implementation for updating the filter
-    // ...
+    cout << "Filter :" << filter << endl;
+
+    cout << endl << "Below are the available filters :" << endl;
+    cout << "1) ---Only retrieve IP Packets which are sent from " << ip_addr << endl;
+    cout << "   ip src " << ip_addr << endl << endl;
+    cout << "2) ---Retrieve packets that are from/to port 443" << endl;
+    cout << "   tcp and port 443" << endl << endl;
+    cout << "3) ---Retrieve UDP datagrams that have destination as port 53" << endl;
+    cout << "   udp and dst port 53" << endl << endl;
+
+    int choice;
+    cout << "Enter filter index :";
+    takeInput(choice);
+    switch (choice)
+    {
+    case 1:
+        filter = "ip src " + ip_addr;
+        break;
+    case 2:
+        filter = "tcp";
+        break;
+    case 3:
+        filter = "udp and dst port 53";
+        break;
+    default:
+        break;
+    }
+
+    cout << endl;
+    system("pause");
+    Start();
+}
+
+void Analyzer::ShowInterfaces() {
+    system("cls");
+    int i = 1;
+    cout << "Interfaces :" << endl << endl;
+    vector<NetworkInterface> interfaces = NetworkInterface::all();
+    // Now iterate them
+    for (const NetworkInterface& iface : interfaces) {
+        cout << i << ") ";
+        // First print the name (GUID)
+        cout << "Interface name: " << iface.name();
+        // Now print the friendly name, a wstring that will contain something like 
+        // "Local Area Connection 2"
+        wcout << " (" << iface.friendly_name() << ")" << endl;
+        cout << "Interface MAC Address: " << iface.hw_address() << endl << endl;
+        i++;
+    }
+
+  /*  int index;
+    cout << endl << endl << "Enter Interface Index that you want to Select :";
+    cin >> index;
+    iface = interfaces[index - 1];*/
+    cout << endl;
+    system("pause");
+    Start();
 }
 
 void Analyzer::StartSniffing() {
@@ -181,25 +258,19 @@ void Analyzer::StartSniffing() {
     cout << "Enter the number of packets you want to sniff :";
     takeInput(count);
     // Sniff on the default interface
-    NetworkInterface iface = NetworkInterface::default_interface();
     SnifferConfiguration config;
     config.set_promisc_mode(true);
     config.set_filter(filter);
+    config.set_immediate_mode(false);
     Sniffer sniffer(iface.name(), config);
     // Start the capture
     sniffer.sniff_loop(make_sniffer_handler(this, &Analyzer::Callback));
+    // Pause and wait for User Input
+    cout << endl;
+    system("pause");
     // Start the program again
     Start();
 }
-
-//void Analyzer::StartThreads() {
-//    // Utilizing threading to run the functions simultaneously.
-//    thread snifferThread(&Analyzer::StartSniffing, this);
-//    thread eventListenerThread(&EventHandler::EventListener, handler);
-//    // Wait for both threads to end
-//    snifferThread.join();
-//    eventListenerThread.join();
-//}
 
 void Analyzer::StopSniffing() {
     isSniffing = false;
@@ -216,88 +287,3 @@ void Analyzer::SavetoPCAP() {
     }
 }
 
-//EventHandler::EventHandler(Analyzer* analyzer) {
-//    this->analyzer = analyzer;
-//}
-//EventHandler::EventHandler() {}
-//
-//void EventHandler::EventListener() {
-//    // Get the standard input handle.
-//    hStdin = GetStdHandle(STD_INPUT_HANDLE);
-//    if (hStdin == INVALID_HANDLE_VALUE)
-//        ErrorExit("GetStdHandle");
-//    // Save the current input mode, to be restored on exit.
-//    if (!GetConsoleMode(hStdin, &fdwSaveOldMode))
-//        ErrorExit("GetConsoleMode");
-//    // Loop to read and handle the next 100 input events.
-//    while (counter++ <= 100)
-//    {
-//        // Wait for the events.
-//        if (!ReadConsoleInput(
-//            hStdin,      // input buffer handle
-//            irInBuf,     // buffer to read into
-//            128,         // size of read buffer
-//            &cNumRead)) // number of records read
-//            ErrorExit("ReadConsoleInput");
-//
-//        // Dispatch the events to the appropriate handler.
-//        for (i = 0; i < cNumRead; i++)
-//        {
-//            switch (irInBuf[i].EventType)
-//            {
-//            case KEY_EVENT: // keyboard input
-//                KeyEventProc(irInBuf[i].Event.KeyEvent);
-//                break;
-//
-//            case MOUSE_EVENT: // mouse input
-//                break;
-//
-//            case WINDOW_BUFFER_SIZE_EVENT: // scrn buf. resizing
-//                break;
-//
-//            case FOCUS_EVENT:  // disregard focus events
-//
-//            case MENU_EVENT:   // disregard menu events
-//                break;
-//
-//            default:
-//                ErrorExit("Unknown event type");
-//                break;
-//            }
-//        }
-//    }
-//    // Restore input mode on exit.
-//    SetConsoleMode(hStdin, fdwSaveOldMode);
-//}
-//
-//VOID EventHandler::ErrorExit(string lpszMessage)
-//{
-//    fprintf(stderr, "%s\n", lpszMessage.c_str());
-//
-//    // Restore input mode on exit.
-//
-//    SetConsoleMode(hStdin, fdwSaveOldMode);
-//
-//    ExitProcess(0);
-//}
-//
-//VOID EventHandler::KeyEventProc(KEY_EVENT_RECORD ker)
-//{
-//    if (ker.bKeyDown)
-//        return;
-//    char pressedKey = (char)ker.wVirtualKeyCode;
-//    switch (pressedKey)
-//    {
-//    case 'Q':
-//        cout << endl << "Quitting Sniffing" << endl;
-//        //analyzer->StopSniffing();
-//        break;
-//    case 'S':
-//        cout << endl << "Saving to PCAP File" << endl;
-//  /*      analyzer->StopSniffing();
-//        analyzer->SavetoPCAP();*/
-//        break;
-//    default:
-//        break;
-//    }
-//}

@@ -32,26 +32,6 @@ public:
     string FilterTransportLayer(const PDU& pdu);
 };
 
-
-//class EventHandler {
-//private:
-//    DWORD cNumRead, fdwMode, i;
-//    INPUT_RECORD irInBuf[128];
-//    int counter;
-//    HANDLE hStdin;
-//    DWORD fdwSaveOldMode;
-//    Analyzer* analyzer;
-//
-//    VOID ErrorExit(string lpszMessage);
-//
-//    VOID KeyEventProc(KEY_EVENT_RECORD ker);
-//
-//public:
-//    EventHandler(Analyzer* analyzer);
-//    //EventHandler();
-//    void EventListener();
-//};
-
 class Analyzer {
 public:
     Analyzer();
@@ -62,11 +42,12 @@ public:
     void StartSniffing();
     void StopSniffing();
     void SavetoPCAP();
-    void StartThreads();
+    void ShowInterfaces();
 private:
     queue<IP> packets;
     queue<IP> AnalysisQueue;
     string filter;
+    NetworkInterface iface;
     bool isSniffing;
     int count;
     OUIResolver ouiResolver;
