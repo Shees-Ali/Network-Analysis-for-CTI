@@ -165,10 +165,8 @@ void Analyzer::DisplayPacket(PDU& pdu) {
     for (const auto& query : dns.queries()) {
         cout << "Domain Name :" << query.dname() << endl;
     }
-
     Analysis analysis;
     analysis.GatherStatistics(pdu);
-
     cout << endl;
 }
 

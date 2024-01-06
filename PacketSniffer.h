@@ -65,6 +65,7 @@ public:
     void StartThreads();
 private:
     queue<IP> packets;
+    queue<IP> AnalysisQueue;
     string filter;
     bool isSniffing;
     int count;
