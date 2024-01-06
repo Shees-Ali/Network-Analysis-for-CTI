@@ -13,14 +13,11 @@ private:
 	static int totalIPV6;
 	static int totalUDP;
 	static int totalTCP;
+	static int totalBytes;
 	Heap DstHeap;
 	static string mostCommonDstIp;
 	Heap SrcHeap;
 	static string mostCommonSrcIp;
-	Heap DstPortHeap;
-	static string mostCommonDstPortIp;
-	Heap SrcPortHeap;
-	static string mostCommonSrcPortIp;
 
 public:
 	Analysis();

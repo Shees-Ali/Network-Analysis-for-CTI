@@ -4,10 +4,9 @@ int Analysis::totalIPV4 = 0;
 int Analysis::totalIPV6 = 0;
 int Analysis::totalUDP = 0;
 int Analysis::totalTCP = 0;
+int Analysis::totalBytes = 0;
 string Analysis::mostCommonDstIp;
 string Analysis::mostCommonSrcIp;
-string Analysis::mostCommonDstPortIp;
-string Analysis::mostCommonSrcPortIp;
 
 void Analysis::GatherStatistics(PDU& pdu)
 {
@@ -21,7 +20,6 @@ void Analysis::GatherStatistics(PDU& pdu)
         else if (ip.version() == 6) {
             totalIPV6++;
         }
-
         //Checking Most Common Destination Ip:
         Analysis::DstHeap.insert(ip.dst_addr().to_string());
         Analysis::mostCommonDstIp = Analysis::DstHeap.GetLargest();
@@ -30,19 +28,13 @@ void Analysis::GatherStatistics(PDU& pdu)
         Analysis::SrcHeap.insert(ip.src_addr().to_string());
         Analysis::mostCommonSrcIp = Analysis::SrcHeap.GetLargest();
     }
+
     // Check If UDP PDU exists
     if (pdu.find_pdu<UDP>()) {
-        UDP udp = pdu.rfind_pdu<UDP>();
         totalUDP++;
-
-        //Checking Most Common Source Port:
-        //Analysis::SrcPortHeap.insert(udp.sport());
-        //Analysis::mostCommonSrcPortIp = Analysis::SrcPortHeap.GetLargest();
-
-        ////Checking Most Destination Source Port:
-        //Analysis::DstPortHeap.insert(udp.dport().to_string());
-        //Analysis::mostCommonDstPortIp = Analysis::DstPortHeap.GetLargest();
+        UDP udp = pdu.rfind_pdu<UDP>();
     }
+
 
     // Check If TCP PDU exists
     if (pdu.find_pdu<TCP>()) {
