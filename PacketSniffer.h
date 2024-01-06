@@ -25,13 +25,6 @@ private:
     map<string, string> ouiMap;
 };
 
-class LayerFilter {
-public:
-    string FilterDataLinkLayer(const PDU& pdu);
-    string FilterNetworkLayer(const PDU& pdu);
-    string FilterTransportLayer(const PDU& pdu);
-};
-
 class Analyzer {
 public:
     Analyzer();
@@ -40,7 +33,6 @@ public:
     void DisplayPacket(PDU& pdu);
     void UpdateFilter();
     void StartSniffing();
-    void StopSniffing();
     void SavetoPCAP();
     void ShowInterfaces();
 private:
