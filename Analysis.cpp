@@ -33,6 +33,8 @@ void Analysis::GatherStatistics(PDU& pdu)
     if (pdu.find_pdu<UDP>()) {
         totalUDP++;
         UDP udp = pdu.rfind_pdu<UDP>();
+        int bytes = udp.size();
+        totalBytes += bytes;
     }
 
 
@@ -40,6 +42,8 @@ void Analysis::GatherStatistics(PDU& pdu)
     if (pdu.find_pdu<TCP>()) {
         TCP tcp = pdu.rfind_pdu<TCP>();
         totalTCP++;
+        int bytes = tcp.size();
+        totalBytes += bytes;
     }
 }
 
@@ -53,6 +57,7 @@ void Analysis::Print() {
         << "Total IPV6: " << totalIPV6 << endl
         << "Total UDP: " << totalUDP << endl
         << "Total TCP: " << totalTCP << endl
+        << "Total Bytes Transferred: " << totalBytes << " Bytes" << endl
         << "Most Common Destination IP: " << Analysis::mostCommonDstIp << endl
         << "Most Common Source IP: " << Analysis::mostCommonSrcIp << endl;
 }
