@@ -55,24 +55,6 @@ void OUIResolver::LoadOUIFile(const string& filename) {
     file.close();
 }
 
-string LayerFilter::FilterDataLinkLayer(const PDU& pdu) {
-    // Implementation for filtering Data Link Layer (Ethernet or Wifi)
-    // ...
-    return "";
-}
-
-string LayerFilter::FilterNetworkLayer(const PDU& pdu) {
-    // Implementation for filtering Network Layer (IPv4 or IPv6)
-    // ...
-    return "";
-}
-
-string LayerFilter::FilterTransportLayer(const PDU& pdu) {
-    // Implementation for filtering Transport Layer (UDP or TCP)
-    // ...
-    return "";
-}
-
 Analyzer::Analyzer() : ouiResolver("assets/ouidb.txt") {
     //this->handler = new EventHandler();
     isSniffing = true;
@@ -103,6 +85,7 @@ void Analyzer::Start() {
     cout << "3. Start Sniffing" << endl;
     cout << "4. Analyze Last Sniffing Session" << endl;
     cout << "5. Save Last Sniffing Session to PCAP file." << endl;
+    cout << "6. Exit" << endl;
     cout << "Enter :";
     takeInput(choice);
     switch (choice)
@@ -117,11 +100,24 @@ void Analyzer::Start() {
         StartSniffing();
         break;
     case 4:
-        showFinalAnalysis();
+        if (!packets.empty()) {
+            showFinalAnalysis();
+        }
+        else {
+            cout << endl << "No Stored Session !" << endl;
+        }
         break;
     case 5:
-        SavetoPCAP();
+        if (!packets.empty()) {
+            SavetoPCAP();
+        }
+        else {
+            cout << endl << "No Stored Session !" << endl;
+        }
         break;
+    case 6:
+        cout << "Closing !!!";
+        exit(1);
     default:
         cout << "Invalid Choice !!!" << endl;
         Start();
@@ -134,7 +130,7 @@ bool Analyzer::Callback(PDU& pdu) {
     //
     // EthernetII / IP / UDP / RawPDU
     DisplayPacket(pdu);
-    Sleep(100);
+    Sleep(1000);
     if (packets.size() >= count) {
         isSniffing = false;
         return isSniffing;
@@ -166,6 +162,7 @@ void Analyzer::DisplayPacket(PDU& pdu) {
         UDP udp = pdu.rfind_pdu<UDP>();
         cout << "User Datagram Protocol, Src Port :" << udp.sport();
         cout << ", Dst Port :" << udp.dport() << endl;
+        cout << "Size :" << udp.size() << " Bytes Captured" << endl;
     }
 
     // Check If TCP PDU exists, if it does then display corresponding info
@@ -173,8 +170,10 @@ void Analyzer::DisplayPacket(PDU& pdu) {
         TCP tcp = pdu.rfind_pdu<TCP>();
         cout << "Transfer Control Protocol, Src Port :" << tcp.sport();
         cout << ", Dst Port :" << tcp.dport() << endl;
+        cout << "Size :" << tcp.size()  << " Bytes Captured" << endl;
     }
 
+    
     // Retrieve the RawPDU layer, and construct a 
     // DNS PDU using its contents.
     // Retrieve the queries and print the domain name:
@@ -183,11 +182,10 @@ void Analyzer::DisplayPacket(PDU& pdu) {
         cout << "Domain Name :" << query.dname() << endl;
     }
 
+    cout << endl << endl << endl;
 
     Analysis analysis;
     analysis.GatherStatistics(pdu);
-
-    cout << endl;
 }
 
 void Analyzer::UpdateFilter() {
@@ -219,9 +217,12 @@ void Analyzer::UpdateFilter() {
         filter = "udp and dst port 53";
         break;
     default:
+        cout << "Wrong Selection !!";
+        UpdateFilter();
         break;
     }
 
+    cout << endl << "Filter Updated !" << endl;
     cout << endl;
     system("pause");
     Start();
@@ -237,17 +238,21 @@ void Analyzer::ShowInterfaces() {
         cout << i << ") ";
         // First print the name (GUID)
         cout << "Interface name: " << iface.name();
-        // Now print the friendly name, a wstring that will contain something like 
-        // "Local Area Connection 2"
+        // Print the friendly name, a wstring that will contain something like 
         wcout << " (" << iface.friendly_name() << ")" << endl;
         cout << "Interface MAC Address: " << iface.hw_address() << endl << endl;
+        cout << "Interface IPv4 Address: " << iface.ipv4_address() << endl << endl;
+        vector<NetworkInterface::IPv6Prefix> ipv6 = iface.ipv6_addresses();
+        if (!ipv6.empty()) {
+            cout << "Interface IPv6 Addresses: " << iface.ipv4_address() << endl << endl;
+            for (const NetworkInterface::IPv6Prefix& v6 : ipv6)
+            {
+                cout << v6.address << endl;
+            }
+        }
         i++;
     }
 
-  /*  int index;
-    cout << endl << endl << "Enter Interface Index that you want to Select :";
-    cin >> index;
-    iface = interfaces[index - 1];*/
     cout << endl;
     system("pause");
     Start();
@@ -273,11 +278,6 @@ void Analyzer::StartSniffing() {
     Start();
 }
 
-void Analyzer::StopSniffing() {
-    isSniffing = false;
-    Start();
-}
-
 void Analyzer::SavetoPCAP() {
     PacketWriter writer = PacketWriter("sniffer_obj.pcap", DataLinkType<IP>());
     while (!packets.empty()) {
@@ -286,5 +286,8 @@ void Analyzer::SavetoPCAP() {
         // removing front element of queue
         packets.pop();
     }
+    cout << "Saved to sniffer_obj.pcap !" << endl << endl;
+    system("pause");
+    Start();
 }
 
