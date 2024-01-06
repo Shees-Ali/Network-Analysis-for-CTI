@@ -1,0 +1,13 @@
+----------------------
+Instructions for Usage
+----------------------
+
+Requirments:
+- Visual Studio 2022 with C/C++
+
+Steps:
+1. Run WinPcap_4_1_3.exe present in Installer folder in the project
+
+2. Use .sln file to open in visual studio
+
+3. Run code on "Debug" and "x86"
