@@ -1,0 +1,19 @@
+----------------------
+Instructions for Usage
+----------------------
+
+Requirments:
+- Visual Studio 2022 with C/C++
+
+Steps:
+1. Run WinPcap_4_1_3.exe present in Installer folder in the project
+
+2. Use .sln file to open in visual studio
+
+3. Run code on "Debug" and "x86"
+
+IF TINS IS NOT FOUND OR NOT RESOLVED
+
+ADD
+$(ProjectDir)\include In C/C++->General->Addtional Include Directories
+$(ProjectDir)\lib in Linker->General->Addtional Library Dependencies
